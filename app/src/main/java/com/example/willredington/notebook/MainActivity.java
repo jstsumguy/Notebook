@@ -1,38 +1,62 @@
 package com.example.willredington.notebook;
 
 import android.app.Activity;
+import android.app.ListActivity;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.content.Intent;
+import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.ListAdapter;
+import android.widget.ListView;
+import android.widget.Toast;
 
-import com.example.willredington.authentication.LoginActivity;
-import com.example.willredington.authentication.User;
+import com.example.willredington.db.NoteBookDataSource;
+import com.example.willredington.list.NoteListAdapter;
 
-public class MainActivity extends AppCompatActivity {
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.Date;
 
-    public static int LOGIN_REQUEST = 1;
+public class MainActivity extends Activity {
+
+    private ListView list;
+    private Button newNote;
+
+    private static NoteBookDataSource nds;
+    private static NoteListAdapter adapter;
+    private static ArrayList<NoteBook> books = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
 
-        if(!User.isLoggedIn())
+        list = (ListView) findViewById(R.id.notelist);
+        newNote = (Button) findViewById(R.id.newbtn);
+
+
+        if(nds == null)
+            nds = new NoteBookDataSource(this);
+        books = nds.getAllNoteBooks();
+
+        if(books != null)
         {
-            Intent i = new Intent(this, LoginActivity.class);
-            this.startActivityForResult(i, LOGIN_REQUEST);
+            adapter = new NoteListAdapter(this, books);
+            list.setAdapter(adapter);
         }
 
-        /* Get all notebooks */
-
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if(requestCode == LOGIN_REQUEST && requestCode == Activity.RESULT_OK)
-        {
-            // Login finished
-        }
+        newNote.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(nds.createNoteBook("Add a title here"))
+                    books = nds.getAllNoteBooks();
+                list.invalidateViews();
+            }
+        });
     }
 }
